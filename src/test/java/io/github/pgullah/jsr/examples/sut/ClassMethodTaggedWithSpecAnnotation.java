@@ -1,6 +1,6 @@
-package pg.works.junit.spec.runner.examples.sut;
+package io.github.pgullah.jsr.examples.sut;
 
-import pg.works.junit.spec.runner.annotation.Spec;
+import io.github.pgullah.jsr.annotation.Spec;
 
 import java.util.LinkedList;
 import java.util.List;

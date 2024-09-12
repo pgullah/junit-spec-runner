@@ -1,8 +1,8 @@
-package pg.works.junit.spec.runner.provider;
+package io.github.pgullah.jsr.provider;
 
-import pg.works.junit.spec.runner.annotation.Spec;
-import pg.works.junit.spec.runner.model.TestSpec;
-import pg.works.junit.spec.runner.util.ReflectUtils;
+import io.github.pgullah.jsr.annotation.Spec;
+import io.github.pgullah.jsr.model.TestSpec;
+import io.github.pgullah.jsr.util.ReflectUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

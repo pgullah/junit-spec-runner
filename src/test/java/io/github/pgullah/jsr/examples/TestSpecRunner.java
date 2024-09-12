@@ -1,10 +1,10 @@
-package pg.works.junit.spec.runner.examples;
+package io.github.pgullah.jsr.examples;
 
-import pg.works.junit.spec.runner.examples.sut.ClassMethodTaggedWithSpecAnnotation;
-import pg.works.junit.spec.runner.examples.sut.FizzBuzz;
-import pg.works.junit.spec.runner.examples.sut.RegexMatching;
-import pg.works.junit.spec.runner.AbstractGenericTestRunner;
-import pg.works.junit.spec.runner.provider.TestSpecProvider;
+import io.github.pgullah.jsr.examples.sut.ClassMethodTaggedWithSpecAnnotation;
+import io.github.pgullah.jsr.examples.sut.FizzBuzz;
+import io.github.pgullah.jsr.examples.sut.RegexMatching;
+import io.github.pgullah.jsr.AbstractGenericTestRunner;
+import io.github.pgullah.jsr.provider.TestSpecProvider;
 
 public class TestSpecRunner extends AbstractGenericTestRunner {
 

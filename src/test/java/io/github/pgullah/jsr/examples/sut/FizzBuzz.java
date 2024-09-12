@@ -1,4 +1,4 @@
-package pg.works.junit.spec.runner.examples.sut;
+package io.github.pgullah.jsr.examples.sut;
 
 public class FizzBuzz {
 

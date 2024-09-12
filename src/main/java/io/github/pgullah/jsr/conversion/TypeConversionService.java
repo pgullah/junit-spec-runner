@@ -1,4 +1,4 @@
-package pg.works.junit.spec.runner.conversion;
+package io.github.pgullah.jsr.conversion;
 
 import org.junit.jupiter.params.shadow.com.univocity.parsers.conversions.*;
 

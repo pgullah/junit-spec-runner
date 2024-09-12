@@ -1,6 +1,6 @@
-package pg.works.junit.spec.runner.provider;
+package io.github.pgullah.jsr.provider;
 
-import pg.works.junit.spec.runner.model.TestSpec;
+import io.github.pgullah.jsr.model.TestSpec;
 
 import java.util.Arrays;
 import java.util.LinkedList;

@@ -1,4 +1,4 @@
-package pg.works.junit.spec.runner.util;
+package io.github.pgullah.jsr.util;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

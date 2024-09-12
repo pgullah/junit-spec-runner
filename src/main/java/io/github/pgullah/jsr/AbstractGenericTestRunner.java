@@ -1,9 +1,9 @@
-package pg.works.junit.spec.runner;
+package io.github.pgullah.jsr;
 
-import pg.works.junit.spec.runner.model.TestSpec;
-import pg.works.junit.spec.runner.util.ReflectUtils;
-import pg.works.junit.spec.runner.conversion.TypeConversionService;
-import pg.works.junit.spec.runner.provider.TestSpecProvider;
+import io.github.pgullah.jsr.model.TestSpec;
+import io.github.pgullah.jsr.util.ReflectUtils;
+import io.github.pgullah.jsr.conversion.TypeConversionService;
+import io.github.pgullah.jsr.provider.TestSpecProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
@@ -37,6 +37,16 @@ public abstract class AbstractGenericTestRunner {
 
     public abstract TestSpecProvider testSpecProvider();
 
+    protected String formatTestCaseName(int testCaseIndex, Method method, Object[] params) {
+        final String paramsCsv = Arrays.stream(params).map(Object::toString).collect(Collectors.joining(","));
+        return String.format("[%d] %s(): %s", testCaseIndex, method.getName(), paramsCsv);
+    }
+
+    /**
+     * Hook to register your own custom converters
+     *
+     * @see org.junit.jupiter.params.shadow.com.univocity.parsers.conversions.Conversion
+     */
     protected void registerCustomerConverters(TypeConversionService typeConversionService) {
     }
 
@@ -80,21 +90,16 @@ public abstract class AbstractGenericTestRunner {
                 }));
             }
             return streamBuilder.build();
-        } catch (Throwable ex) {
+        } catch (Throwable err) {
             return Stream.of(
-                    dynamicTest(formatTestCaseName(0, method, new Object[]{}), () -> assertionFailure().cause(ex).buildAndThrow())
+                    dynamicTest(formatTestCaseName(0, method, new Object[]{}), () -> assertionFailure().cause(err).buildAndThrow())
             );
         }
     }
 
-    protected String formatTestCaseName(int testCaseIndex, Method method, Object[] params) {
-        final String paramsCsv = Arrays.stream(params).map(Object::toString).collect(Collectors.joining(","));
-        return String.format("[%d] %s(): %s", testCaseIndex, method.getName(), paramsCsv);
-    }
-
     private Object convertToTargetType(String value, Class<?> targetType) {
         return typeConversionService.lookupConverter(targetType)
-                .map(c -> c.execute(value))
+                .map(conversion -> conversion.execute(value))
                 .orElseThrow(() -> new RuntimeException("No converter found for the element:" + value));
     }
 

@@ -1,8 +1,9 @@
 plugins {
     id 'java'
+    id 'maven-publish'
 }
 
-group = 'pg.works'
+group = 'io.github.pgullah'
 version = '1.0.0-SNAPSHOT'
 
 repositories {
@@ -24,3 +25,52 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Junit Spec Runner'
+                description = 'Create dynamic test using spec files'
+                url = 'https://github.com/pgullah'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'pgullah'
+                        name = 'Pradeep Gulla'
+                        email = 'pradeep.gulla@hotmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git@github.com:pgullah/junit-spec-runner.git'
+                    developerConnection = 'scm:git:ssh://github.com:pgullah/junit-spec-runner.git'
+                    url = 'http://example.com/my-library/'
+                }
+            }
+            /*credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }*/
+        }
+    }
+}
+
+/*
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            name = "OSSRH"
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
+}
+*/
