@@ -33,10 +33,6 @@ publishing {
             name = "GitHubPackages"
             url = "https://maven.pkg.github.com/pgullah/junit-spec-runner"
             credentials {
-                println(">> project.findProperty(\"gpr.user\") " + project.findProperty("gpr.user"))
-                println(">> project.findProperty(\"gpr.key\") " + project.findProperty("gpr.key"))
-                getLogger().debug(">> project.findProperty(\"gpr.user\") " + project.findProperty("gpr.user"))
-                getLogger().debug(">> project.findProperty(\"gpr.key\") " + project.findProperty("gpr.key"))
                 username = System.getenv("GH_USERNAME")
                 password = System.getenv("GH_TOKEN")
             }

@@ -43,7 +43,9 @@ jobs:
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
     # the publishing section of your build.gradle
     - name: Publish to GitHub Packages
-      run: ./gradlew release publish
+      # FIXME: Gradle release publish. Refer: https://github.com/researchgate/gradle-release
+#      run: ./gradlew release publish
+      run: ./gradlew publish
       env:
         GH_USERNAME: ${{ github.actor }}
         GH_TOKEN: ${{ secrets.GH_PUBLISH_TOKEN }}
