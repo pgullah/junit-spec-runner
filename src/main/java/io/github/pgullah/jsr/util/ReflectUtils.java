@@ -3,7 +3,6 @@ package io.github.pgullah.jsr.util;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -15,12 +14,6 @@ public class ReflectUtils {
     public static Stream<Method> filterClassMethods(Class clazz, Predicate<Method> filter) {
         return Arrays.stream(clazz.getDeclaredMethods())
                 .filter(filter);
-    }
-
-    public static Method getClassMethod(Class clazz, String method) {
-        return filterClassMethods(clazz, m -> Objects.equals(method, m.getName()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("method doesn't exist"));
     }
 
     public static Object executeMethod(Class clazz, Method clazzMethod, Object... args) throws Exception {
@@ -47,5 +40,8 @@ public class ReflectUtils {
         return receiver;
     }
 
+    public static boolean isConcreteClass(Class<?> clazz) {
+        return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
+    }
 
 }

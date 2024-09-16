@@ -1,10 +1,11 @@
 package io.github.pgullah.jsr.conversion;
 
+import io.github.pgullah.jsr.util.ReflectUtils;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.conversions.ObjectConversion;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Converts Iterables objects like., Array/List
@@ -34,10 +35,21 @@ public class IterableConversion extends ObjectConversion {
             //TODO: implement other collections
             return Arrays.stream(elements)
                     .map(String::trim)
-                    //TODO: any type hints to pass the expected data type with the collection ??
                     .map(eachElement -> typeConversionService.lookupConverter(String.class).map(c -> c.execute(eachElement)))
                     .flatMap(Optional::stream)
-                    .toList();
+                    .collect(Collectors.toCollection(this::collectionSupplier));
         }
+    }
+
+    private Collection<Object> collectionSupplier() {
+        if (ReflectUtils.isConcreteClass(targetType) && targetType.isAssignableFrom(Collection.class)) {
+            // assuming we get only collection items here
+            return (Collection<Object>) ReflectUtils.newInstance(targetType);
+        } else if (targetType.isAssignableFrom(List.class)) {
+            return new ArrayList<>();
+        } else if (targetType.isAssignableFrom(Set.class)) {
+            return new HashSet<>();
+        }
+        throw new UnsupportedOperationException("TargetType %s is not a collection type!".formatted(targetType));
     }
 }

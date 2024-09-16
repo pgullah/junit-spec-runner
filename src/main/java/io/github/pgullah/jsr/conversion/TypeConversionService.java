@@ -31,6 +31,11 @@ public class TypeConversionService {
         return Optional.ofNullable(conversion);
     }
 
+    public <T> T convert(Object value, Class<T> targetType) {
+        final Conversion conversion = lookupConverter(targetType).orElseThrow(() -> new RuntimeException("No converter found for the element:" + value));
+        return (T) conversion.execute(value);
+    }
+
     private static class PassThroughConversion extends ObjectConversion<String> {
         private static final PassThroughConversion INSTANCE = new PassThroughConversion();
 

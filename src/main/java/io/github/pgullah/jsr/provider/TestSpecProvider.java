@@ -21,13 +21,13 @@ public interface TestSpecProvider {
         private Builder() {
         }
 
-        public Builder addAnnotated(Class... classes) {
+        public Builder addAnnotated(Class<?>... classes) {
             providerList.add(new AnnotatedTestSpecProvider(Arrays.asList(classes)));
             return this;
         }
 
-        public Builder addSimple(String specPath, Class clazz, String method) {
-            providerList.add(() -> Stream.of(new TestSpec(specPath, clazz, method)));
+        public Builder addSimple(String specPath, Class<?> clazz, String method) {
+            providerList.add(() -> Stream.of(TestSpec.testSpecBuilderOf(specPath, clazz, method).build()));
             return this;
         }
 

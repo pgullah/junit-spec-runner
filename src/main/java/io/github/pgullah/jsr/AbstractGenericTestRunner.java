@@ -1,10 +1,12 @@
 package io.github.pgullah.jsr;
 
-import io.github.pgullah.jsr.model.TestSpec;
-import io.github.pgullah.jsr.util.ReflectUtils;
+import io.github.pgullah.jsr.conversion.MethodArgsConverter;
+import io.github.pgullah.jsr.conversion.ReflectiveMethodArgsConverter;
 import io.github.pgullah.jsr.conversion.TypeConversionService;
+import io.github.pgullah.jsr.conversion.TypeConverter;
+import io.github.pgullah.jsr.model.TestSpec;
 import io.github.pgullah.jsr.provider.TestSpecProvider;
-import org.junit.jupiter.api.Assertions;
+import io.github.pgullah.jsr.util.ReflectUtils;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -15,13 +17,16 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 /**
@@ -51,19 +56,22 @@ public abstract class AbstractGenericTestRunner {
     }
 
     private Stream<DynamicContainer> buildDynamicTests(TestSpec testSpec) {
-        final String path = testSpec.path();
         final Pattern methodPattern = Pattern.compile(testSpec.method());
-        final Class classToTest = testSpec.sourceClass();
+        final Class<?> classToTest = testSpec.sourceClass();
         return ReflectUtils.filterClassMethods(classToTest, clazzMethod -> methodPattern.matcher(clazzMethod.getName()).matches())
-                .map(method -> buildDynamicTests(path, classToTest, method))
-                .map(tests -> DynamicContainer.dynamicContainer(classToTest.getName(), tests));
+                .map(method -> buildDynamicTests(testSpec, method))
+                .map(tests -> dynamicContainer(classToTest.getName(), tests));
     }
 
-    private Stream<DynamicTest> buildDynamicTests(String path, Class classToTest, Method method) {
-        CsvParserSettings settings = new CsvParserSettings();
-//        settings.setHeaderExtractionEnabled(true);
+    private Stream<DynamicTest> buildDynamicTests(TestSpec testSpec, Method method) {
+        final String path = testSpec.path();
+        final Class<?> classToTest = testSpec.sourceClass();
+        final CsvParserSettings settings = new CsvParserSettings();
+        settings.setHeaderExtractionEnabled(testSpec.includeHeader());
         final Class<?>[] methodParameterTypes = method.getParameterTypes();
         final Class<?> methodReturnType = method.getReturnType();
+        final Supplier<MethodArgsConverter> defaultMethodArgsConverter = () -> new ReflectiveMethodArgsConverter(typeConversionService, methodParameterTypes);
+        final Supplier<TypeConverter<String, ?>> defaultResultConverter = () -> input -> typeConversionService.convert(input, methodReturnType);
         final CsvParser csvParser = new CsvParser(settings);
         try (var input = new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(path)))) {
             Stream.Builder<DynamicTest> streamBuilder = Stream.builder();
@@ -74,20 +82,21 @@ public abstract class AbstractGenericTestRunner {
                 final int methodParameterCount = methodParameterTypes.length;
                 final int lastColumnIndex = columnCount - 1;
                 final int inputParamCount = columnCount - 1;
-                assertEquals(methodParameterCount, inputParamCount,
-                        "Expected parameter count and input parameter count should match");
-                final Object[] methodArgs = IntStream.range(0, methodParameterTypes.length)
-                        .mapToObj(i -> convertToTargetType(record.getString(i), methodParameterTypes[i]))
-                        .toArray();
+                assertEquals(methodParameterCount, inputParamCount, "Expected parameter count and input parameter count should match");
+                final Object[] methodArgs = getOrDefaultTypeConverter(testSpec.argsConverter(), defaultMethodArgsConverter)
+                        .convert(record.getValues());
                 final Object actual = ReflectUtils.executeMethod(classToTest, method, methodArgs);
-                final Object expected = convertToTargetType(record.getString(lastColumnIndex), methodReturnType);
-                streamBuilder.add(dynamicTest(formatTestCaseName(recordIdx, method, record.getValues()), () -> {
+                final Object expected = getOrDefaultTypeConverter(testSpec.resultConverter(), defaultResultConverter)
+                        .convert(record.getString(lastColumnIndex));
+                final var testCaseName = formatTestCaseName(recordIdx, method, record.getValues());
+                final var dynamicTest = dynamicTest(testCaseName, () -> {
                     if (methodReturnType.isArray()) {
-                        Assertions.assertArrayEquals((Object[]) expected, (Object[]) actual);
+                        assertArrayEquals((Object[]) expected, (Object[]) actual);
                     } else {
-                        Assertions.assertEquals(expected, actual);
+                        assertEquals(expected, actual);
                     }
-                }));
+                });
+                streamBuilder.add(dynamicTest);
             }
             return streamBuilder.build();
         } catch (Throwable err) {
@@ -97,10 +106,11 @@ public abstract class AbstractGenericTestRunner {
         }
     }
 
-    private Object convertToTargetType(String value, Class<?> targetType) {
-        return typeConversionService.lookupConverter(targetType)
-                .map(conversion -> conversion.execute(value))
-                .orElseThrow(() -> new RuntimeException("No converter found for the element:" + value));
+    private static <TC extends TypeConverter<?, ?>> TC getOrDefaultTypeConverter(
+            final Optional<Class<? extends TC>> baseConverter, final Supplier<TC> defaultMethodArgsConverter) {
+        return baseConverter
+                .map((clazz) -> (TC) ReflectUtils.newInstance(clazz))
+                .orElseGet(defaultMethodArgsConverter);
     }
 
 }

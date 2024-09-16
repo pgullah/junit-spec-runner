@@ -9,10 +9,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class AnnotatedTestSpecProvider implements TestSpecProvider {
-    private final List<Class> classes;
+import static io.github.pgullah.jsr.model.TestSpec.testSpecBuilderOf;
 
-    AnnotatedTestSpecProvider(List<Class> mandatoryClass) {
+public final class AnnotatedTestSpecProvider implements TestSpecProvider {
+    private final List<Class<?>> classes;
+
+    AnnotatedTestSpecProvider(List<Class<?>> mandatoryClass) {
         this.classes = mandatoryClass;
     }
 
@@ -20,14 +22,21 @@ public final class AnnotatedTestSpecProvider implements TestSpecProvider {
     public Stream<TestSpec> get() {
         return classes.stream()
                 .flatMap(cls -> ReflectUtils.filterClassMethods(cls, method -> lookupAnnotation(method) != null)
-                        .map(method -> new TestSpec(lookupAnnotation(method).path(), cls, method.getName())));
+                        .map(method -> {
+                            final Spec spec = lookupAnnotation(method);
+                            return testSpecBuilderOf(spec.path(), cls, method.getName())
+                                    .includeHeader(spec.includeHeader())
+                                    .argsConverter(spec.argsConverter())
+                                    .resultConverter(spec.resultConverter())
+                                    .build();
+                        }));
     }
 
     private static Spec lookupAnnotation(Method method) {
         return method.getDeclaredAnnotation(Spec.class);
     }
 
-    public static TestSpecProvider of(Class...classes) {
+    public static TestSpecProvider of(Class<?>...classes) {
         return new AnnotatedTestSpecProvider(Arrays.asList(classes));
     }
 }
