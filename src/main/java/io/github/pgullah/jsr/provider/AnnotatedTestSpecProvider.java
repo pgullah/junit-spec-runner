@@ -7,11 +7,13 @@ import io.github.pgullah.jsr.util.ReflectUtils;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static io.github.pgullah.jsr.model.TestSpec.testSpecBuilderOf;
 
 public final class AnnotatedTestSpecProvider implements TestSpecProvider {
+    private static final Predicate<Method> METHOD_CONTAINS_SPEC_ANNOTATION = method -> lookupAnnotation(method) != null;
     private final List<Class<?>> classes;
 
     AnnotatedTestSpecProvider(List<Class<?>> mandatoryClass) {
@@ -21,7 +23,7 @@ public final class AnnotatedTestSpecProvider implements TestSpecProvider {
     @Override
     public Stream<TestSpec> get() {
         return classes.stream()
-                .flatMap(cls -> ReflectUtils.filterClassMethods(cls, method -> lookupAnnotation(method) != null)
+                .flatMap(cls -> ReflectUtils.filterClassMethods(cls, METHOD_CONTAINS_SPEC_ANNOTATION)
                         .map(method -> {
                             final Spec spec = lookupAnnotation(method);
                             return testSpecBuilderOf(spec.path(), cls, method.getName())
