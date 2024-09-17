@@ -16,12 +16,12 @@ public class TypeConversionService {
         converterRegistry.put(float.class, new FloatConversion());
         converterRegistry.put(double.class, new DoubleConversion());
         converterRegistry.put(boolean.class, new BooleanConversion(
-                new String[]{"true", "TRUE", "Y"}, new String[]{"false", "FALSE", "N"})
+                new String[]{"true", "True", "TRUE", "Y", "n"}, new String[]{"false", "False", "FALSE", "N", "n"})
         );
-        converterRegistry.put(String.class, PassThroughConversion.INSTANCE);
+        converterRegistry.put(String.class, NoopConversion.INSTANCE);
     }
 
-    public Optional<Conversion> lookupConverter(Class<?> targetType) {
+    private Optional<Conversion> lookupConverter(Class<?> targetType) {
         Conversion<String, ?> conversion = converterRegistry.get(targetType);
         if (conversion == null) {
             if (targetType.isArray() || targetType.isAssignableFrom(List.class)) {
@@ -36,10 +36,14 @@ public class TypeConversionService {
         return (T) conversion.execute(value);
     }
 
-    private static class PassThroughConversion extends ObjectConversion<String> {
-        private static final PassThroughConversion INSTANCE = new PassThroughConversion();
+    public <S, T> void registerConverter(Class<S> sourceType, Conversion<String, T> targetType) {
+        converterRegistry.put(sourceType, targetType);
+    }
 
-        private PassThroughConversion() {
+    private static class NoopConversion extends ObjectConversion<String> {
+        private static final NoopConversion INSTANCE = new NoopConversion();
+
+        private NoopConversion() {
             // no init;
         }
 
@@ -47,9 +51,5 @@ public class TypeConversionService {
         protected String fromString(String s) {
             return s;
         }
-    }
-
-    public <S, T> void registerConverter(Class<S> sourceType, Conversion<String, T> targetType) {
-        converterRegistry.put(sourceType, targetType);
     }
 }

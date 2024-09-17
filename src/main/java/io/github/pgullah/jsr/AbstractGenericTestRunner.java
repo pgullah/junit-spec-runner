@@ -42,7 +42,7 @@ public abstract class AbstractGenericTestRunner {
 
     public abstract TestSpecProvider testSpecProvider();
 
-    protected String formatTestCaseName(int testCaseIndex, Method method, Object[] params) {
+    protected String formatTestCaseName(int testCaseIndex, Method method, Object...params) {
         final String paramsCsv = Arrays.stream(params).map(Object::toString).collect(Collectors.joining(","));
         return String.format("[%d] %s(): %s", testCaseIndex, method.getName(), paramsCsv);
     }
@@ -65,7 +65,6 @@ public abstract class AbstractGenericTestRunner {
 
     private Stream<DynamicTest> buildDynamicTests(TestSpec testSpec, Method method) {
         final String path = testSpec.path();
-        final Class<?> classToTest = testSpec.sourceClass();
         final CsvParserSettings settings = new CsvParserSettings();
         settings.setHeaderExtractionEnabled(testSpec.includeHeader());
         final Class<?>[] methodParameterTypes = method.getParameterTypes();
@@ -78,17 +77,16 @@ public abstract class AbstractGenericTestRunner {
             final var recordIterator = csvParser.iterateRecords(input).iterator();
             for (int recordIdx = 0; recordIterator.hasNext(); recordIdx++) {
                 final var record = recordIterator.next();
-                final int columnCount = record.getValues().length;
+                final int totalColumns = record.getValues().length;
                 final int methodParameterCount = methodParameterTypes.length;
-                final int lastColumnIndex = columnCount - 1;
-                final int inputParamCount = columnCount - 1;
-                assertEquals(methodParameterCount, inputParamCount, "Expected parameter count and input parameter count should match");
+                final int resultColumnIndex = totalColumns - 1;
+                assertEquals(methodParameterCount, totalColumns - 1, "Expected parameter count and input parameter count should match");
                 final Object[] methodArgs = getOrDefaultTypeConverter(testSpec.argsConverter(), defaultMethodArgsConverter)
                         .convert(record.getValues());
-                final Object actual = ReflectUtils.executeMethod(classToTest, method, methodArgs);
+                final Object actual = ReflectUtils.executeMethod(testSpec.sourceClass(), method, methodArgs);
                 final Object expected = getOrDefaultTypeConverter(testSpec.resultConverter(), defaultResultConverter)
-                        .convert(record.getString(lastColumnIndex));
-                final var testCaseName = formatTestCaseName(recordIdx, method, record.getValues());
+                        .convert(record.getString(resultColumnIndex));
+                final var testCaseName = formatTestCaseName(recordIdx, method, (Object[]) record.getValues());
                 final var dynamicTest = dynamicTest(testCaseName, () -> {
                     if (methodReturnType.isArray()) {
                         assertArrayEquals((Object[]) expected, (Object[]) actual);

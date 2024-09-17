@@ -27,16 +27,15 @@ public class IterableConversion extends ObjectConversion {
             Object arr = Array.newInstance(targetType.getComponentType(), elements.length);
             for (int i = 0; i < elements.length; i++) {
                 Object el = elements[i];
-                Object convertedValue = typeConversionService.lookupConverter(targetType.getComponentType()).map(c -> c.execute(el)).orElse(el);
+                Object convertedValue = typeConversionService.convert(el, targetType.getComponentType());
                 Array.set(arr, i, convertedValue);
             }
             return arr;
         } else {
-            //TODO: implement other collections
             return Arrays.stream(elements)
                     .map(String::trim)
-                    .map(eachElement -> typeConversionService.lookupConverter(String.class).map(c -> c.execute(eachElement)))
-                    .flatMap(Optional::stream)
+                    // TODO: Identify the elements type in collection
+                    .map(eachElement -> typeConversionService.convert(eachElement, String.class))
                     .collect(Collectors.toCollection(this::collectionSupplier));
         }
     }
