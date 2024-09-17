@@ -1,7 +1,5 @@
 package io.github.pgullah.jsr.conversion;
 
-import java.util.Collection;
-
 public interface MethodArgsConverter extends TypeConverter<String[], Object[]> {
 
     /**

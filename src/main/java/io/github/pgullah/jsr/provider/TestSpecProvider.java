@@ -27,7 +27,11 @@ public interface TestSpecProvider {
         }
 
         public Builder addSimple(String specPath, Class<?> clazz, String method) {
-            providerList.add(() -> Stream.of(TestSpec.testSpecBuilderOf(specPath, clazz, method).build()));
+            return addSimple(TestSpec.testSpecBuilderOf(specPath, clazz, method).build());
+        }
+
+        public Builder addSimple(TestSpec testSpec) {
+            providerList.add(() -> Stream.of(testSpec));
             return this;
         }
 

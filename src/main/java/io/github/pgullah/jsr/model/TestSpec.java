@@ -10,6 +10,16 @@ public record TestSpec(String path, Class<?> sourceClass, String method,
                        Optional<Class<? extends MethodArgsConverter>> argsConverter,
                        Optional<Class<? extends TypeConverter<String, ?>>> resultConverter) {
 
+    public TestSpec {
+        if (argsConverter.filter(c -> c == MethodArgsConverter.None.class).isPresent()) {
+            throw new IllegalArgumentException("Method args converter must not be of None type");
+        }
+
+        if (resultConverter.filter(c -> c == TypeConverter.None.class).isPresent()) {
+            throw new IllegalArgumentException("Result converter must not be of None type");
+        }
+    }
+
     public static Builder testSpecBuilderOf(String path, Class<?> sourceClass, String method) {
         return new Builder(path, sourceClass, method);
     }
@@ -53,5 +63,4 @@ public record TestSpec(String path, Class<?> sourceClass, String method,
                     Optional.ofNullable(resultConverter));
         }
     }
-
 }

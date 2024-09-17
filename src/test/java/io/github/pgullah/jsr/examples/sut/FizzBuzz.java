@@ -15,7 +15,7 @@ public class FizzBuzz {
                 }
                 fizzOrBuzz += "Buzz";
             }
-            objects[i-1] = fizzOrBuzz.isEmpty() ? ""+i : fizzOrBuzz;
+            objects[i-1] = fizzOrBuzz.isEmpty() ? String.valueOf(i) : fizzOrBuzz;
         }
         return objects;
     }
